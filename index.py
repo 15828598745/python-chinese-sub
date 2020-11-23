@@ -8,7 +8,10 @@ scriptState = 0
 # 匹配html内的中文
 reg_1 = '([\u4E00-\u9FA5]+\s?\w+)(?=\<\/)'
 reg_2 = '(?<=\s)([\u4E00-\u9FA5]+\w+)'
-reg_3 = '(\w+-?)+="[\u4E00-\u9FA5]+\w+:?"'
+# (\w+-?)+="(\w+|\\(|\\))[\u4E00-\u9FA5]+.*?"
+# (\w+-?)+="\w*([\u4E00-\u9FA5])+.*?"
+# (\w+-?)+="[\u4E00-\u9FA5]+\w+:?"
+reg_3 = '(\w+-?)+="\w*([\u4E00-\u9FA5])+.*?"' 
 # 匹配script内的中文
 reg_4 = '(\"|\'|`)[\u4E00-\u9FA5]+\w+(\?|\？|\！|\!)?(\"|\'|`)'
 
@@ -18,7 +21,11 @@ def getCode(sList,regNum):
   a = []
   for strZh in sList:
     if regNum == 3:
-      strZh = re.finditer("[\u4E00-\u9FA5]+\w:?",strZh)
+      strZh = re.finditer("(?<='|\")[^'|\"]+",strZh)
+      for match in strZh:
+        strZh = match.group()
+    if regNum == 4:
+      strZh = re.finditer("\w*[\u4E00-\u9FA5]+\w+(\?|\？|\！|\!)?",strZh)
       for match in strZh:
         strZh = match.group()
     if strZh in zhArr: 
@@ -102,6 +109,7 @@ def handel(old,new):
   f1 = open(old,'r')
   allLines = f1.readlines()
   f2 = open(new, "w")
+  lineIndex = 0
   for line in allLines :
     if re.findall("<template",line):
       templateState += 1
@@ -181,7 +189,7 @@ def outCodeConf(path):
   )
   for i in range(len(zhArr)):
     fd.write(
-     "\"code_" + str(i) + "\": \"" + zhArr[i] + "\",\r\n"
+     "\"code_" + str(i) + "\": \"" + str(zhArr[i]) + "\",\r\n"
     )
   fd.write("}")
   fd.close()
@@ -206,5 +214,5 @@ def run(enter,out):
   outCodeConf(out)
 
 # handel("./old/index.vue","./new/index.vue")
-# run("/home/lh/work/liahng/sav/admin-client/src/views","./new")
-run("./old","./new")
+run("/home/lh/work/liahng/film/admin-web/src/views","./new")
+# run("./old","./new")
